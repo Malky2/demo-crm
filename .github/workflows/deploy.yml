@@ -1,0 +1,50 @@
+name: Deploy Demo CRM to Killercoda
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Pull, tag and push Docker image
+      run: |
+        docker pull pwstaging/demo-crm:latest
+        docker tag pwstaging/demo-crm:latest malkystef/demo-crm:latest
+        docker push malkystef/demo-crm:latest
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Decode and configure kubeconfig
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+
+    - name: Replace image placeholder in deployment.yaml
+      run: |
+        sed -i 's|IMAGE_PLACEHOLDER|malkystef/demo-crm:latest|' k8s/deployment.yaml
+
+    - name: Apply deployment to cluster
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl rollout status deployment/demo-crm
+
+    - name: Show pod status and access help
+      run: |
+        kubectl get pods
+        echo "To access the app, run:"
+        echo "kubectl port-forward deployment/demo-crm 3000:3000"
