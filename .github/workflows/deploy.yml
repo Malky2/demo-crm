@@ -22,8 +22,8 @@ jobs:
     - name: Pull, tag and push Docker image
       run: |
         docker pull pwstaging/demo-crm:latest
-        docker tag pwstaging/demo-crm:latest malkystef/demo-crm:latest
-        docker push malkystef/demo-crm:latest
+        docker tag pwstaging/demo-crm:latest malky2/demo-crm:latest
+        docker push malky2/demo-crm:latest
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
@@ -32,21 +32,11 @@ jobs:
 
     - name: Decode and configure kubeconfig
       run: |
-      mkdir -p $HOME/.kube
-      echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
 
     - name: Replace image placeholder in deployment.yaml
       run: |
-        sed -i 's|IMAGE_PLACEHOLDER|malkystef/demo-crm:latest|' k8s/deployment.yaml
+        sed -i 's|IMAGE_PLACEHOLDER|malky2/demo-crm:latest|' k8s/deployment.yaml
 
-    - name: Apply deployment to cluster
-      run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl rollout status deployment/demo-crm
-
-    - name: Show pod status and access help
-      run: |
-        kubectl get pods
-        echo "To access the app, run:"
-        echo "kubectl port-forward deployment/demo-crm 3000:3000"
+    - name: Apply deplo
