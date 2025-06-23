@@ -39,4 +39,11 @@ jobs:
       run: |
         sed -i 's|IMAGE_PLACEHOLDER|malky2/demo-crm:latest|' k8s/deployment.yaml
 
-    - name: Apply deplo
+    - name: Apply deployment to cluster
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+
+    - name: Show pod status and access help
+      run: |
+        kubectl get pods
+        echo "Use kubectl port-forward svc/demo-crm 8080:3000 to access the app"
