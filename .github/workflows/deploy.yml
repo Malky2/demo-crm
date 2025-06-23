@@ -1,5 +1,4 @@
-
- name: Deploy Demo CRM to Killercoda
+name: Deploy Demo CRM to Killercoda
 
 on:
   push:
@@ -26,23 +25,28 @@ jobs:
         docker tag pwstaging/demo-crm:latest malky2/demo-crm:latest
         docker push malky2/demo-crm:latest
 
-    - name: Create kind cluster
-      uses: helm/kind-action@v1.8.0
+    - name: Install kind
+      uses: helm/kind-action@v1.7.0
       with:
         cluster_name: kind
-
-    - name: Load Docker image into kind
-      run: |
-        kind load docker-image malky2/demo-crm:latest --name kind
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
         version: 'latest'
 
+    - name: Decode and configure kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+
     - name: Replace image placeholder in deployment.yaml
       run: |
         sed -i 's|IMAGE_PLACEHOLDER|malky2/demo-crm:latest|' k8s/deployment.yaml
+
+    - name: Load image into kind
+      run: |
+        kind load docker-image malky2/demo-crm:latest --name kind
 
     - name: Apply deployment to cluster
       run: |
